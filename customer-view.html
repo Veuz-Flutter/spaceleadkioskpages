@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer View - GULFOOD MANUFACTURING</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000;
+            overflow: hidden;
+            position: static;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .customer-view-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .customer-view-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .customer-view-bg {
+                object-fit: contain;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="customer-view-container">
+        <img src="customer_view_bg.png" alt="GULFOOD MANUFACTURING Customer View" class="customer-view-bg">
+    </div>
+
+    <!-- Include the scripts -->
+    <script src="scripts.js"></script>
+</body>
+
+</html>
