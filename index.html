@@ -5,386 +5,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Check-In System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+        <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            overflow: hidden;
-            position: static;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header Section */
-        .header {
-            background-color: #4a2c7a;
-            padding: 20px 20px;
-            text-align: center;
-            color: white;
-            position: relative;
-        }
-
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            width: 220px;
-            height: 220px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .drawer-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 70px;
-            height: 70px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .drawer-btn:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .drawer-btn:active {
-            transform: translateY(0);
-        }
-
-        .drawer-icon {
-            font-size: 32px;
-            color: white;
-        }
-
-        .lock-btn {
-            visibility: hidden;
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            width: 70px;
-            height: 70px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .lock-btn:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .lock-btn:active {
-            transform: translateY(0);
-        }
-
-        .lock-icon {
-            font-size: 32px;
-            color: white;
-        }
-
-
-        .main-content.hidden {
-            display: none;
-        }
-
-        .drawer-btn.hidden {
-            display: none;
-        }
-
-        .footer.hidden {
-            display: none;
-        }
-
-        .logo-text {
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-
-        .logo-subtitle {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .event-details {
-            margin-top: 15px;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        /* Main Content Section */
-        .main-content {
-            flex: 1;
-            background: linear-gradient(to bottom, #e0d2f0, #ffffff);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 60px 20px;
-        }
-
-        .welcome-section {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .welcome-title {
-            font-size: 48px;
-            font-weight: bold;
-            color: #4a2c7a;
-            margin-bottom: 15px;
-        }
-
-        .user-name {
-            font-weight: 900;
-        }
-
-        .responsibility {
-            font-size: 18px;
-            color: #6b7280;
-            margin-top: 10px;
-        }
-
-        .responsibility-bold {
-            font-weight: bold;
-            color: #374151;
-        }
-
-        /* Check-in Buttons */
-        .checkin-buttons {
-            display: flex;
-            gap: 40px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .checkin-btn {
-            width: 280px;
-            height: 120px;
-            background: linear-gradient(135deg, #4a2c7a 0%, #6b46c1 100%);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            padding: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(74, 44, 122, 0.3);
-        }
-
-        .checkin-btn:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 35px rgba(74, 44, 122, 0.4);
-        }
-
-        .checkin-btn:active {
-            transform: translateY(-2px);
-        }
-
-        .btn-icon {
-            width: 60px;
-            height: 60px;
-            margin-right: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-        }
-
-        .btn-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: brightness(0) invert(1);
-        }
-
-        .btn-text {
-            color: white;
-            text-align: left;
-            flex: 1;
-        }
-
-        .btn-text-line1 {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .btn-text-line2 {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        /* Footer Section */
-        .footer {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            padding: 20px;
-            z-index: 1000;
-        }
-
-        .powered-by-logo {
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .powered-by-logo img {
-            height: 100%;
-            width: auto;
-            object-fit: contain;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .checkin-buttons {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .checkin-btn {
-                width: 100%;
-                max-width: 320px;
-            }
-
-            .welcome-title {
-                font-size: 36px;
-            }
-
-            .logo-text {
-                font-size: 24px;
-            }
-        }
-
-        /* Dummy Controls Panel */
-        .dummy-controls {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: transparent;
-            padding: 15px 20px;
-            z-index: 9999;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dummy-controls.hidden {
-            display: none;
-        }
-
-        .dummy-controls-title {
-            color: #fff;
-            font-weight: bold;
-            font-size: 14px;
-            margin-right: 15px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .dummy-control-btn {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #6b46c1 0%, #4a2c7a 100%);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .dummy-control-btn:hover {
-            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(107, 70, 193, 0.4);
-        }
-
-        .dummy-control-btn:active {
-            transform: translateY(0);
-        }
-
-        .dummy-control-btn.danger {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-        }
-
-        .dummy-control-btn.danger:hover {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-        }
-
-        .dummy-control-btn.success {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        }
-
-        .dummy-control-btn.success:hover {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
-        }
-    </style>
 </head>
 
 <body>
     <!-- Dummy Controls Panel -->
     <div class="dummy-controls" id="dummyControls">
-        <button class="dummy-control-btn" onclick="checkInWithQR()">📱 Check In QR</button>
-        <button class="dummy-control-btn" onclick="checkInWithSearch()">🔍 Check In Search</button>
-        <button class="dummy-control-btn" onclick="openDrawer()">☰ Open Drawer</button>
-        <button class="dummy-control-btn" onclick="toggleKioskLock()">🔒 Toggle Kiosk Lock</button>
-        <button class="dummy-control-btn" onclick="unlockKioskLock()">🔓 Unlock Kiosk</button>
-        <button class="dummy-control-btn success" onclick="togglePoweredBy()">👁️ Toggle Powered By</button>
-        <button class="dummy-control-btn danger" onclick="hideDummyControlls()">❌ Hide Controls</button>
+<button class="dummy-control-btn" onclick="checkInWithQR()">
+  <i class="fa-solid fa-qrcode"></i> Check In QR
+</button>
+
+<button class="dummy-control-btn" onclick="checkInWithSearch()">
+  <i class="fa-solid fa-magnifying-glass"></i> Check In Search
+</button>
+
+<button class="dummy-control-btn" onclick="openDrawer()">
+  <i class="fa-solid fa-bars"></i> Open Drawer
+</button>
+
+<button class="dummy-control-btn" onclick="toggleKioskLock()">
+  <i class="fa-solid fa-lock"></i> Toggle Kiosk Lock
+</button>
+
+<button class="dummy-control-btn" onclick="unlockKioskLock()">
+  <i class="fa-solid fa-unlock"></i> Unlock Kiosk
+</button>
+
+<button class="dummy-control-btn success" onclick="togglePoweredBy()">
+  <i class="fa-solid fa-eye"></i> Toggle Powered By
+</button>
+
+<button class="dummy-control-btn danger" onclick="hideDummyControlls()">
+  <i class="fa-solid fa-xmark"></i> Hide Controls
+</button>
+
     </div>
 
     <!-- Header Section -->
@@ -393,8 +50,10 @@
             <div class="drawer-icon">☰</div>
         </button>
         <button class="lock-btn" onclick="unlockKioskLock()">
-            <div class="lock-icon" id="lockIcon">🔒</div>
-        </button>
+            <div class="lock-icon" id="lockIcon">
+                <i class="fa-solid fa-unlock"></i>
+            </div>
+            </button>
         <div class="logo-container">
             <div class="logo-icon">
                 <img src="gfm_home_logo.png" alt="GULFOOD MANUFACTURING Logo">
@@ -403,8 +62,9 @@
     </div>
 
     <!-- Main Content Section -->
-    <div class="main-content" id="mainContent">
-        <div class="welcome-section">
+    <div class="main-content" >
+        <div class="main-content_wrapper" id="mainContent">
+            <div class="welcome-section">
             <div class="welcome-title">
                 WELCOME
             </div>
@@ -434,12 +94,24 @@
                 </div>
             </button>
         </div>
+        </div>
     </div>
 
     <!-- Footer Section -->
-    <div class="footer">
+    <div class="footer">     
         <div class="powered-by-logo">
             <img src="poweredby.png" alt="Powered by EventXPro">
+        </div>
+    </div>
+
+
+        <div id="qrModal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
+            <div class="modal-body">
+                <img src="qr_code.svg" alt="QR" class="modal-qr" />
+                <div id="qrModalTitle" class="modal-title">Scanning QR...</div>
+                <div class="modal-sub">Please hold on</div>
+            </div>
         </div>
     </div>
 

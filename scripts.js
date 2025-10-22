@@ -25,6 +25,25 @@ function sendToFlutter(data) {
 // Check-in functions
 function checkInWithQR() {
     console.log('🔍 QR Code check-in initiated');
+
+    // show modal
+    const modal = document.getElementById('qrModal');
+    if (modal) {
+        modal.classList.add('visible');
+        modal.setAttribute('aria-hidden', 'false');
+
+        // clear previous timeout if any
+        if (window.__qrModalTimeout) {
+            clearTimeout(window.__qrModalTimeout);
+        }
+
+        // auto-close after 5 seconds
+        window.__qrModalTimeout = setTimeout(() => {
+            modal.classList.remove('visible');
+            modal.setAttribute('aria-hidden', 'true');
+        }, 3000);
+    }
+
     sendToFlutter({
         type: 'checkInQR',
         timestamp: new Date().toISOString()
@@ -64,14 +83,14 @@ function toggleKioskLock(value) {
         // Lock the kiosk
         mainContent.classList.add('hidden');
         drawerBtn.classList.add('hidden');
-        lockIcon.textContent = '🔓'; // Show unlock icon
+        // lockIcon.textContent = '🔓'; // Show unlock icon
         lockIcon.style.visibility = 'visible';
         console.log('🔒 Kiosk locked');
     } else {
         // Unlock the kiosk
         mainContent.classList.remove('hidden');
         drawerBtn.classList.remove('hidden');
-        lockIcon.textContent = '🔒'; // Show lock icon
+        // lockIcon.textContent = '🔒'; // Show lock icon
         // change the lock icon visiblity hidden
         lockIcon.style.visibility = 'hidden';
         console.log('🔓 Kiosk unlocked');

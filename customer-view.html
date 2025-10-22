@@ -5,8 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer View - GULFOOD MANUFACTURING</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
     <style>
-        * {
+        /* * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -28,36 +31,53 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
+        } */
 
-        .customer-view-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .customer-view-bg {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .customer-view-bg {
-                object-fit: contain;
-            }
-        }
+       
     </style>
 </head>
 
 <body>
+
+     <div class="dummy-controls" id="dummyControls">
+<button class="dummy-control-btn" onclick="checkInWithQR()">
+  <i class="fa-solid fa-qrcode"></i> Check In QR
+</button>
+
+<button class="dummy-control-btn" onclick="checkInWithSearch()">
+  <i class="fa-solid fa-magnifying-glass"></i> Check In Search
+</button>
+
+<button class="dummy-control-btn" onclick="openDrawer()">
+  <i class="fa-solid fa-bars"></i> Open Drawer
+</button>
+
+<button class="dummy-control-btn" onclick="toggleKioskLock()">
+  <i class="fa-solid fa-lock"></i> Toggle Kiosk Lock
+</button>
+
+<button class="dummy-control-btn" onclick="unlockKioskLock()">
+  <i class="fa-solid fa-unlock"></i> Unlock Kiosk
+</button>
+
+<button class="dummy-control-btn success" onclick="togglePoweredBy()">
+  <i class="fa-solid fa-eye"></i> Toggle Powered By
+</button>
+
+<button class="dummy-control-btn danger" onclick="hideDummyControlls()">
+  <i class="fa-solid fa-xmark"></i> Hide Controls
+</button>
+
+    </div>
     <div class="customer-view-container">
         <img src="customer_view_bg.png" alt="GULFOOD MANUFACTURING Customer View" class="customer-view-bg">
+    </div>
+
+      <div class="footer powered-by-logo_white">
+        
+        <div class="powered-by-logo">
+            <img src="img/logo_white.png" alt="Powered by EventXPro">
+        </div>
     </div>
 
     <!-- Include the scripts -->
