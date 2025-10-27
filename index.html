@@ -7,40 +7,40 @@
     <title>Event Check-In System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-        <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
 
 </head>
 
 <body>
     <!-- Dummy Controls Panel -->
-    <div class="dummy-controls" id="dummyControls">
-<button class="dummy-control-btn" onclick="checkInWithQR()">
-  <i class="fa-solid fa-qrcode"></i> Check In QR
-</button>
+    <div class="dummy-controls hidden" id="dummyControls">
+        <button class="dummy-control-btn" onclick="checkInWithQR()">
+            <i class="fa-solid fa-qrcode"></i> Check In QR
+        </button>
 
-<button class="dummy-control-btn" onclick="checkInWithSearch()">
-  <i class="fa-solid fa-magnifying-glass"></i> Check In Search
-</button>
+        <button class="dummy-control-btn" onclick="checkInWithSearch()">
+            <i class="fa-solid fa-magnifying-glass"></i> Check In Search
+        </button>
 
-<button class="dummy-control-btn" onclick="openDrawer()">
-  <i class="fa-solid fa-bars"></i> Open Drawer
-</button>
+        <button class="dummy-control-btn" onclick="openDrawer()">
+            <i class="fa-solid fa-bars"></i> Open Drawer
+        </button>
 
-<button class="dummy-control-btn" onclick="toggleKioskLock()">
-  <i class="fa-solid fa-lock"></i> Toggle Kiosk Lock
-</button>
+        <button class="dummy-control-btn" onclick="toggleKioskLock()">
+            <i class="fa-solid fa-lock"></i> Toggle Kiosk Lock
+        </button>
 
-<button class="dummy-control-btn" onclick="unlockKioskLock()">
-  <i class="fa-solid fa-unlock"></i> Unlock Kiosk
-</button>
+        <button class="dummy-control-btn" onclick="unlockKioskLock()">
+            <i class="fa-solid fa-unlock"></i> Unlock Kiosk
+        </button>
 
-<button class="dummy-control-btn success" onclick="togglePoweredBy()">
-  <i class="fa-solid fa-eye"></i> Toggle Powered By
-</button>
+        <button class="dummy-control-btn success" onclick="togglePoweredBy()">
+            <i class="fa-solid fa-eye"></i> Toggle Powered By
+        </button>
 
-<button class="dummy-control-btn danger" onclick="hideDummyControlls()">
-  <i class="fa-solid fa-xmark"></i> Hide Controls
-</button>
+        <button class="dummy-control-btn danger" onclick="hideDummyControlls()">
+            <i class="fa-solid fa-xmark"></i> Hide Controls
+        </button>
 
     </div>
 
@@ -53,7 +53,7 @@
             <div class="lock-icon" id="lockIcon">
                 <i class="fa-solid fa-unlock"></i>
             </div>
-            </button>
+        </button>
         <div class="logo-container">
             <div class="logo-icon">
                 <img src="gfm_home_logo.png" alt="GULFOOD MANUFACTURING Logo">
@@ -62,50 +62,50 @@
     </div>
 
     <!-- Main Content Section -->
-    <div class="main-content" >
+    <div class="main-content">
         <div class="main-content_wrapper" id="mainContent">
             <div class="welcome-section">
-            <div class="welcome-title">
-                WELCOME
+                <div class="welcome-title">
+                    WELCOME
+                </div>
+                <div class="responsibility">
+                    Your responsibility: <span class="responsibility-bold" id="userRole">Registration Desk</span>
+                </div>
             </div>
-            <div class="responsibility">
-                Your responsibility: <span class="responsibility-bold" id="userRole">Registration Desk</span>
+
+            <div class="checkin-buttons">
+                <button class="checkin-btn" onclick="checkInWithQR()">
+                    <div class="btn-icon">
+                        <img src="qr_code.svg" alt="QR Code">
+                    </div>
+                    <div class="btn-text">
+                        <div class="btn-text-line1">Check in with</div>
+                        <div class="btn-text-line2">QR Code</div>
+                    </div>
+                </button>
+
+                <button class="checkin-btn" onclick="checkInWithSearch()">
+                    <div class="btn-icon">
+                        <img src="search_icon.svg" alt="Search">
+                    </div>
+                    <div class="btn-text">
+                        <div class="btn-text-line1">Check in with</div>
+                        <div class="btn-text-line2">Search</div>
+                    </div>
+                </button>
             </div>
-        </div>
-
-        <div class="checkin-buttons">
-            <button class="checkin-btn" onclick="checkInWithQR()">
-                <div class="btn-icon">
-                    <img src="qr_code.svg" alt="QR Code">
-                </div>
-                <div class="btn-text">
-                    <div class="btn-text-line1">Check in with</div>
-                    <div class="btn-text-line2">QR Code</div>
-                </div>
-            </button>
-
-            <button class="checkin-btn" onclick="checkInWithSearch()">
-                <div class="btn-icon">
-                    <img src="search_icon.svg" alt="Search">
-                </div>
-                <div class="btn-text">
-                    <div class="btn-text-line1">Check in with</div>
-                    <div class="btn-text-line2">Search</div>
-                </div>
-            </button>
-        </div>
         </div>
     </div>
 
     <!-- Footer Section -->
-    <div class="footer">     
+    <div class="footer">
         <div class="powered-by-logo">
             <img src="poweredby.png" alt="Powered by EventXPro">
         </div>
     </div>
 
 
-        <div id="qrModal" class="modal" aria-hidden="true">
+    <div id="qrModal" class="modal" aria-hidden="true">
         <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
             <div class="modal-body">
                 <img src="qr_code.svg" alt="QR" class="modal-qr" />
