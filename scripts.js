@@ -146,6 +146,48 @@ function hideDummyControlls() {
     }
 }
 
+function showWelcome(userData) {
+    console.log('👋 Welcome message shown', userData);
+
+    // Update welcome message with user data
+    if (userData) {
+        // Extract the name from userData
+        const firstName = userData.firstname || '';
+        const lastName = userData.lastname || '';
+        const fullName = firstName ? `${firstName} ${lastName}`.trim() : 'Visitor';
+
+        // Update the welcome message content
+        const welcomeName = document.getElementById('welcome-name');
+        if (welcomeName) {
+            welcomeName.textContent = fullName;
+        }
+    } else {
+        // Default message if no data provided
+        const welcomeName = document.getElementById('welcome-name');
+        if (welcomeName) {
+            welcomeName.textContent = '';
+        }
+    }
+
+    // Show the welcome message
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    if (welcomeMessage) {
+        welcomeMessage.classList.remove('hidden');
+
+        // Hide the message after 5 seconds
+        setTimeout(() => {
+            welcomeMessage.classList.add('hidden');
+            console.log('🙈 Welcome message hidden');
+        }, 5000);
+    }
+
+    sendToFlutter({
+        type: 'showWelcome',
+        data: userData,
+        timestamp: new Date().toISOString()
+    });
+}
+
 function showDummyControlls() {
     const dummyControls = document.getElementById('dummyControls');
     if (dummyControls) {
@@ -204,7 +246,7 @@ function updateCustomerDetailsDisplay(data) {
     updateField('customer-field-job', data.designation || '');
     updateField('customer-field-nationality', data.nationality || '');
     // Ticket info (ticket object with nested properties)
-    const ticketInfo = data.ticket ? (data.ticket.name || data.ticket.ticket_type || '') : '';
+    const ticketInfo = data.ticket ? (data.ticket.ticket_display_name || data.ticket.name || '') : '';
     updateField('customer-field-ticket', ticketInfo);
 }
 

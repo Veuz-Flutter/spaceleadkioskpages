@@ -1,0 +1,113 @@
+<style>
+    /* Welcome Message */
+    .welcome-message {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.7);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 15000;
+    }
+
+    .welcome-message:not(.hidden) {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .welcome-message-content {
+        background: linear-gradient(135deg, #6b0285 0%, #4a2c7a 100%);
+        border-radius: 20px;
+        padding: 60px 80px;
+        text-align: center;
+        min-width: 500px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: welcomeBounce 0.5s ease-out;
+    }
+
+    @keyframes welcomeBounce {
+        0% {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .welcome-icon {
+        font-size: 64px;
+        color: #ffd700;
+        margin-bottom: 20px;
+        animation: wave 1s ease-in-out infinite;
+    }
+
+    @keyframes wave {
+
+        0%,
+        100% {
+            transform: rotate(0deg);
+        }
+
+        25% {
+            transform: rotate(20deg);
+        }
+
+        75% {
+            transform: rotate(-20deg);
+        }
+    }
+
+    .welcome-title {
+        color: white;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .welcome-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 20px;
+        font-weight: 400;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-message-content {
+            min-width: auto;
+            width: 90%;
+            padding: 40px 30px;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+        }
+    }
+</style>
+
+<!-- Welcome Message -->
+<div class="welcome-message hidden" id="welcomeMessage">
+    <div class="welcome-message-content">
+        <i class="fa-solid fa-hand-wave welcome-icon"></i>
+        <h1 class="welcome-title">Welcome <span id="welcome-name"></span></h1>
+        <p class="welcome-subtitle">Thank you for visiting GULFOOD MANUFACTURING!</p>
+    </div>
+</div>

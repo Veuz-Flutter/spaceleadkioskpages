@@ -13,36 +13,7 @@
 
 <body>
     <!-- Dummy Controls Panel -->
-    <div class="dummy-controls hidden" id="dummyControls">
-        <button class="dummy-control-btn" onclick="checkInWithQR()">
-            <i class="fa-solid fa-qrcode"></i> Check In QR
-        </button>
-
-        <button class="dummy-control-btn" onclick="checkInWithSearch()">
-            <i class="fa-solid fa-magnifying-glass"></i> Check In Search
-        </button>
-
-        <button class="dummy-control-btn" onclick="openDrawer()">
-            <i class="fa-solid fa-bars"></i> Open Drawer
-        </button>
-
-        <button class="dummy-control-btn" onclick="toggleKioskLock()">
-            <i class="fa-solid fa-lock"></i> Toggle Kiosk Lock
-        </button>
-
-        <button class="dummy-control-btn" onclick="unlockKioskLock()">
-            <i class="fa-solid fa-unlock"></i> Unlock Kiosk
-        </button>
-
-        <button class="dummy-control-btn success" onclick="togglePoweredBy()">
-            <i class="fa-solid fa-eye"></i> Toggle Powered By
-        </button>
-
-        <button class="dummy-control-btn danger" onclick="hideDummyControlls()">
-            <i class="fa-solid fa-xmark"></i> Hide Controls
-        </button>
-
-    </div>
+    <div id="dummyControllContainer"></div>
 
     <!-- Header Section -->
     <div class="header">
@@ -116,6 +87,15 @@
     </div>
 
     <!-- Include the scripts -->
+    <script>
+        // Load customer details panel from external file
+        fetch('dummy-controls.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('dummyControllContainer').innerHTML = html;
+            })
+            .catch(error => console.error('Error loading customer details panel:', error));
+    </script>
     <script src="scripts.js"></script>
 </body>
 
