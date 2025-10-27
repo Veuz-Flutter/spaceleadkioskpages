@@ -7,6 +7,9 @@ function receiveFromFlutter(data) {
         toggleKioskLock(data.value);
     } else if (data.type === 'togglePoweredBy') {
         togglePoweredBy(data.value);
+    } else if (data.type === 'toggleCustomerDetails') {
+        // Pass the customer data object (if available) or null
+        toggleCustomerDetails(data.customerData !== undefined ? data.customerData : data.value);
     }
 }
 
@@ -148,6 +151,84 @@ function showDummyControlls() {
     if (dummyControls) {
         dummyControls.classList.remove('hidden');
         console.log('👁️ Dummy controls visible');
+    }
+}
+
+// Customer details data
+let customerData = null;
+let isCustomerDetailsVisible = false;
+
+function toggleCustomerDetails(data) {
+
+    const detailsPanel = document.getElementById('customerDetailsPanel');
+
+    // If data is provided, use it
+    if (data !== undefined && data !== null) {
+        // Store customer data
+        customerData = data;
+        isCustomerDetailsVisible = true;
+
+        // Populate the fields with customer data
+        updateCustomerDetailsDisplay(data);
+
+        // Show the panel
+        if (detailsPanel) {
+            detailsPanel.classList.remove('hidden');
+            console.log('👁️ Customer details visible with data:', data);
+        }
+    } else if (data === null) {
+        // Hide the panel
+        isCustomerDetailsVisible = false;
+        customerData = null;
+        if (detailsPanel) {
+            detailsPanel.classList.add('hidden');
+            console.log('🙈 Customer details hidden');
+        }
+    }
+
+    sendToFlutter({
+        type: 'toggleCustomerDetails',
+        value: isCustomerDetailsVisible,
+        data: customerData,
+        timestamp: new Date().toISOString(),
+    });
+}
+
+function updateCustomerDetailsDisplay(data) {
+    // Update each field with the customer data from Flutter model
+    updateField('customer-field-firstname', data.firstname || '');
+    updateField('customer-field-lastname', data.lastname || '');
+    updateField('customer-field-email', data.email || '');
+    updateField('customer-field-phone', data.mobile || '');
+    updateField('customer-field-company', data.company || '');
+    updateField('customer-field-job', data.designation || '');
+    updateField('customer-field-nationality', data.nationality || '');
+    // Ticket info (ticket object with nested properties)
+    const ticketInfo = data.ticket ? (data.ticket.name || data.ticket.ticket_type || '') : '';
+    updateField('customer-field-ticket', ticketInfo);
+}
+
+function updateField(id, value) {
+    const field = document.getElementById(id);
+    if (field) {
+        field.textContent = value;
+    }
+}
+
+// Function called from Flutter to update user details form
+function updateUserDetailsForm(userData) {
+
+    sendToFlutter({
+        type: 'log',
+        timestamp: new Date().toISOString()
+    });
+
+    if (userData && Object.keys(userData).length > 0) {
+        // Show and populate customer details
+        toggleCustomerDetails(userData);
+    } else {
+        // Hide customer details if no data
+        toggleCustomerDetails(null);
     }
 }
 

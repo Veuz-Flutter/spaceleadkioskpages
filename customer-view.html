@@ -8,31 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
-  <style>
-    /* * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #000;
-            overflow: hidden;
-            position: static;
-        }
-
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        } */
-  </style>
 </head>
 
 <body>
@@ -62,6 +37,10 @@
       <i class="fa-solid fa-eye"></i> Toggle Powered By
     </button>
 
+    <button class="dummy-control-btn" onclick="toggleCustomerDetails()">
+      <i class="fa-solid fa-user"></i> Toggle Customer Details
+    </button>
+
     <button class="dummy-control-btn danger" onclick="hideDummyControlls()">
       <i class="fa-solid fa-xmark"></i> Hide Controls
     </button>
@@ -71,6 +50,9 @@
     <img src="customer_view_bg.png" alt="GULFOOD MANUFACTURING Customer View" class="customer-view-bg">
   </div>
 
+  <!-- Customer Details Panel -->
+  <div id="customerDetailsPanelContainer"></div>
+
   <div class="footer powered-by-logo_white">
 
     <div class="powered-by-logo">
@@ -79,6 +61,15 @@
   </div>
 
   <!-- Include the scripts -->
+  <script>
+    // Load customer details panel from external file
+    fetch('customer-details-panel.html')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('customerDetailsPanelContainer').innerHTML = html;
+      })
+      .catch(error => console.error('Error loading customer details panel:', error));
+  </script>
   <script src="scripts.js"></script>
 </body>
 
