@@ -10,20 +10,58 @@
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
 </head>
 
+<style>
+    .customer-view-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* ensures the video fills like a background image */
+      z-index: -1; /* keeps the video behind any other content */
+    }
+
+    .bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgb(0 0 0 / 78%); /* semi-transparent overlay */
+      z-index: 0; /* ensures the overlay is above the video but below content */
+    }
+
+    .customer_view_logo{
+      position: absolute;
+      width: auto;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+</style>
+
 <body>
 
   <!-- Dummy Controls Panel -->
   <div id="dummyControllContainer"></div>
 
   <div class="customer-view-container">
-    <img src="customer_view_bg.png" alt="GULFOOD MANUFACTURING Customer View" class="customer-view-bg">
+  <video class="customer-view-bg" autoplay muted loop playsinline>
+    <source src="videos/bg_video.mp4" type="video/mp4">
+  </video>
+  <div class="bg-overlay">
+
   </div>
+
+</div>
 
   <!-- Customer Details Panel -->
   <div id="customerDetailsPanelContainer"></div>
 
   <!-- Welcome Message -->
   <div id="welcomeMessageContainer"></div>
+  <img class="customer_view_logo" src="gfm_home_logo.png" alt="">
 
   <div class="footer powered-by-logo_white">
 
