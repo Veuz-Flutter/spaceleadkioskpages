@@ -7,7 +7,7 @@
         right: 0;
         background: transparent;
         padding: 15px 20px;
-        z-index: 9999;
+        z-index: 998;
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
@@ -73,7 +73,8 @@
 </style>
 
 <!-- Dummy Controls Panel -->
-<div class="dummy-controls " id="dummyControls">
+<div class="dummy-controls" id="dummyControls">
+<!-- <div class="dummy-controls hidden" id="dummyControls"> -->
     <button class="dummy-control-btn" onclick="checkInWithQR()">
         <i class="fa-solid fa-qrcode"></i> Check In QR
     </button>
@@ -92,6 +93,10 @@
 
     <button class="dummy-control-btn" onclick="unlockKioskLock()">
         <i class="fa-solid fa-unlock"></i> Unlock Kiosk
+    </button>
+
+    <button class="dummy-control-btn" onclick="toggleRegistrationMode()">
+        <i class="fa-solid fa-user-plus"></i> Toggle Registration Mode
     </button>
 
     <button class="dummy-control-btn success" onclick="togglePoweredBy()">
@@ -117,6 +122,10 @@
         ticket: {'ticket_display_name': 'VIP Access'},
     })">
         <i class="fa-solid fa-user"></i> Toggle Customer Details
+    </button>
+
+    <button class="dummy-control-btn success" onclick="openRegistrationForm()">
+        <i class="fa-solid fa-clipboard-list"></i> Open Registration Form
     </button>
 
     <button class="dummy-control-btn danger" onclick="hideDummyControlls()">

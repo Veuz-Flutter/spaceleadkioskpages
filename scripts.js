@@ -10,6 +10,10 @@ function receiveFromFlutter(data) {
     } else if (data.type === 'toggleCustomerDetails') {
         // Pass the customer data object (if available) or null
         toggleCustomerDetails(data.customerData !== undefined ? data.customerData : data.value);
+    } else if (data.type === 'toggleRegistrationMode') {
+        toggleRegistrationMode(data.value);
+    } else if (data.type === 'showError') {
+        showError(data.error);
     }
 }
 
@@ -67,6 +71,78 @@ function openDrawer() {
     sendToFlutter({
         type: 'openDrawer',
         timestamp: new Date().toISOString()
+    });
+}
+
+// // Self registration action
+// function selfRegister(extraData) {
+//     const payload = {
+//         type: 'selfRegister',
+//         timestamp: new Date().toISOString()
+//     };
+//     if (extraData && typeof extraData === 'object') {
+//         payload.data = extraData;
+//     }
+//     console.log('📝 Self registration triggered');
+//     sendToFlutter(payload);
+// }
+
+// Registration mode state
+let isRegistrationMode = false;
+
+function toggleRegistrationMode(value) {
+
+    closeRegistrationForm();
+    // If value is provided (true/false), use it; otherwise toggle
+    isRegistrationMode = value !== undefined ? value : !isRegistrationMode;
+
+    const lockIcon = document.getElementById('lockIcon');
+    const drawerBtn = document.querySelector('.drawer-btn');
+    const selfRegistrationButton = document.querySelector('.checkin-buttons .checkin-btn[onclick="openRegistrationForm()"]');
+    const qrCodeButton = document.querySelector('.checkin-buttons .checkin-btn[onclick="checkInWithQR()"]');
+    const searchButton = document.querySelector('.checkin-buttons .checkin-btn[onclick="checkInWithSearch()"]');
+
+    if (isRegistrationMode) {
+        // Registration mode: show unlock button, hide drawer button, hide first 2 buttons, show Self Registration button
+        if (lockIcon) {
+            lockIcon.style.visibility = 'visible';
+        }
+        if (drawerBtn) {
+            drawerBtn.classList.add('hidden');
+        }
+        if (qrCodeButton) {
+            qrCodeButton.classList.add('hidden');
+        }
+        if (searchButton) {
+            searchButton.classList.add('hidden');
+        }
+        if (selfRegistrationButton) {
+            selfRegistrationButton.classList.remove('hidden');
+        }
+    } else {
+        // Normal mode: hide unlock button (unless kiosk is locked), show drawer button, show first 2 buttons, hide Self Registration button
+        if (lockIcon) {
+            // Only show the unlock if kiosk is locked; otherwise hide it
+            lockIcon.style.visibility = isKioskLocked ? 'visible' : 'hidden';
+        }
+        if (drawerBtn) {
+            drawerBtn.classList.remove('hidden');
+        }
+        if (qrCodeButton) {
+            qrCodeButton.classList.remove('hidden');
+        }
+        if (searchButton) {
+            searchButton.classList.remove('hidden');
+        }
+        if (selfRegistrationButton) {
+            selfRegistrationButton.classList.add('hidden');
+        }
+    }
+
+    sendToFlutter({
+        type: 'toggleRegistrationMode',
+        value: isRegistrationMode,
+        timestamp: new Date().toISOString(),
     });
 }
 
@@ -149,6 +225,9 @@ function hideDummyControlls() {
 function showWelcome(userData) {
     console.log('👋 Welcome message shown', userData);
 
+    // Close the registration form
+    closeRegistrationForm();
+
     // Update welcome message with user data
     if (userData) {
         // Extract the name from userData
@@ -194,6 +273,883 @@ function showDummyControlls() {
         dummyControls.classList.remove('hidden');
         console.log('👁️ Dummy controls visible');
     }
+}
+
+// Registration Form Functions
+let registrationFormAutoCloseTimeout = null;
+let iti = null; // intl-tel-input instance
+
+// Single country list variable for all dropdowns - Complete list of all countries
+const COUNTRIES_LIST = [
+    { value: "Afghanistan", text: "Afghanistan", code: "af" },
+    { value: "Albania", text: "Albania", code: "al" },
+    { value: "Algeria", text: "Algeria", code: "dz" },
+    { value: "Andorra", text: "Andorra", code: "ad" },
+    { value: "Angola", text: "Angola", code: "ao" },
+    { value: "Antigua and Barbuda", text: "Antigua and Barbuda", code: "ag" },
+    { value: "Argentina", text: "Argentina", code: "ar" },
+    { value: "Armenia", text: "Armenia", code: "am" },
+    { value: "Australia", text: "Australia", code: "au" },
+    { value: "Austria", text: "Austria", code: "at" },
+    { value: "Azerbaijan", text: "Azerbaijan", code: "az" },
+    { value: "Bahamas", text: "Bahamas", code: "bs" },
+    { value: "Bahrain", text: "Bahrain", code: "bh" },
+    { value: "Bangladesh", text: "Bangladesh", code: "bd" },
+    { value: "Barbados", text: "Barbados", code: "bb" },
+    { value: "Belarus", text: "Belarus", code: "by" },
+    { value: "Belgium", text: "Belgium", code: "be" },
+    { value: "Belize", text: "Belize", code: "bz" },
+    { value: "Benin", text: "Benin", code: "bj" },
+    { value: "Bhutan", text: "Bhutan", code: "bt" },
+    { value: "Bolivia", text: "Bolivia", code: "bo" },
+    { value: "Bosnia and Herzegovina", text: "Bosnia and Herzegovina", code: "ba" },
+    { value: "Botswana", text: "Botswana", code: "bw" },
+    { value: "Brazil", text: "Brazil", code: "br" },
+    { value: "Brunei", text: "Brunei", code: "bn" },
+    { value: "Bulgaria", text: "Bulgaria", code: "bg" },
+    { value: "Burkina Faso", text: "Burkina Faso", code: "bf" },
+    { value: "Burundi", text: "Burundi", code: "bi" },
+    { value: "Cambodia", text: "Cambodia", code: "kh" },
+    { value: "Cameroon", text: "Cameroon", code: "cm" },
+    { value: "Canada", text: "Canada", code: "ca" },
+    { value: "Cape Verde", text: "Cape Verde", code: "cv" },
+    { value: "Central African Republic", text: "Central African Republic", code: "cf" },
+    { value: "Chad", text: "Chad", code: "td" },
+    { value: "Chile", text: "Chile", code: "cl" },
+    { value: "China", text: "China", code: "cn" },
+    { value: "Colombia", text: "Colombia", code: "co" },
+    { value: "Comoros", text: "Comoros", code: "km" },
+    { value: "Congo", text: "Congo", code: "cg" },
+    { value: "Costa Rica", text: "Costa Rica", code: "cr" },
+    { value: "Croatia", text: "Croatia", code: "hr" },
+    { value: "Cuba", text: "Cuba", code: "cu" },
+    { value: "Cyprus", text: "Cyprus", code: "cy" },
+    { value: "Czech Republic", text: "Czech Republic", code: "cz" },
+    { value: "Denmark", text: "Denmark", code: "dk" },
+    { value: "Djibouti", text: "Djibouti", code: "dj" },
+    { value: "Dominica", text: "Dominica", code: "dm" },
+    { value: "Dominican Republic", text: "Dominican Republic", code: "do" },
+    { value: "East Timor", text: "East Timor", code: "tl" },
+    { value: "Ecuador", text: "Ecuador", code: "ec" },
+    { value: "Egypt", text: "Egypt", code: "eg" },
+    { value: "El Salvador", text: "El Salvador", code: "sv" },
+    { value: "Equatorial Guinea", text: "Equatorial Guinea", code: "gq" },
+    { value: "Eritrea", text: "Eritrea", code: "er" },
+    { value: "Estonia", text: "Estonia", code: "ee" },
+    { value: "Ethiopia", text: "Ethiopia", code: "et" },
+    { value: "Fiji", text: "Fiji", code: "fj" },
+    { value: "Finland", text: "Finland", code: "fi" },
+    { value: "France", text: "France", code: "fr" },
+    { value: "Gabon", text: "Gabon", code: "ga" },
+    { value: "Gambia", text: "Gambia", code: "gm" },
+    { value: "Georgia", text: "Georgia", code: "ge" },
+    { value: "Germany", text: "Germany", code: "de" },
+    { value: "Ghana", text: "Ghana", code: "gh" },
+    { value: "Greece", text: "Greece", code: "gr" },
+    { value: "Grenada", text: "Grenada", code: "gd" },
+    { value: "Guatemala", text: "Guatemala", code: "gt" },
+    { value: "Guinea", text: "Guinea", code: "gn" },
+    { value: "Guinea-Bissau", text: "Guinea-Bissau", code: "gw" },
+    { value: "Guyana", text: "Guyana", code: "gy" },
+    { value: "Haiti", text: "Haiti", code: "ht" },
+    { value: "Honduras", text: "Honduras", code: "hn" },
+    { value: "Hungary", text: "Hungary", code: "hu" },
+    { value: "Iceland", text: "Iceland", code: "is" },
+    { value: "India", text: "India", code: "in" },
+    { value: "Indonesia", text: "Indonesia", code: "id" },
+    { value: "Iran", text: "Iran", code: "ir" },
+    { value: "Iraq", text: "Iraq", code: "iq" },
+    { value: "Ireland", text: "Ireland", code: "ie" },
+    { value: "Israel", text: "Israel", code: "il" },
+    { value: "Italy", text: "Italy", code: "it" },
+    { value: "Ivory Coast", text: "Ivory Coast", code: "ci" },
+    { value: "Jamaica", text: "Jamaica", code: "jm" },
+    { value: "Japan", text: "Japan", code: "jp" },
+    { value: "Jordan", text: "Jordan", code: "jo" },
+    { value: "Kazakhstan", text: "Kazakhstan", code: "kz" },
+    { value: "Kenya", text: "Kenya", code: "ke" },
+    { value: "Kiribati", text: "Kiribati", code: "ki" },
+    { value: "North Korea", text: "North Korea", code: "kp" },
+    { value: "South Korea", text: "South Korea", code: "kr" },
+    { value: "Kuwait", text: "Kuwait", code: "kw" },
+    { value: "Kyrgyzstan", text: "Kyrgyzstan", code: "kg" },
+    { value: "Laos", text: "Laos", code: "la" },
+    { value: "Latvia", text: "Latvia", code: "lv" },
+    { value: "Lebanon", text: "Lebanon", code: "lb" },
+    { value: "Lesotho", text: "Lesotho", code: "ls" },
+    { value: "Liberia", text: "Liberia", code: "lr" },
+    { value: "Libya", text: "Libya", code: "ly" },
+    { value: "Liechtenstein", text: "Liechtenstein", code: "li" },
+    { value: "Lithuania", text: "Lithuania", code: "lt" },
+    { value: "Luxembourg", text: "Luxembourg", code: "lu" },
+    { value: "Macedonia", text: "Macedonia", code: "mk" },
+    { value: "Madagascar", text: "Madagascar", code: "mg" },
+    { value: "Malawi", text: "Malawi", code: "mw" },
+    { value: "Malaysia", text: "Malaysia", code: "my" },
+    { value: "Maldives", text: "Maldives", code: "mv" },
+    { value: "Mali", text: "Mali", code: "ml" },
+    { value: "Malta", text: "Malta", code: "mt" },
+    { value: "Marshall Islands", text: "Marshall Islands", code: "mh" },
+    { value: "Mauritania", text: "Mauritania", code: "mr" },
+    { value: "Mauritius", text: "Mauritius", code: "mu" },
+    { value: "Mexico", text: "Mexico", code: "mx" },
+    { value: "Micronesia", text: "Micronesia", code: "fm" },
+    { value: "Moldova", text: "Moldova", code: "md" },
+    { value: "Monaco", text: "Monaco", code: "mc" },
+    { value: "Mongolia", text: "Mongolia", code: "mn" },
+    { value: "Montenegro", text: "Montenegro", code: "me" },
+    { value: "Morocco", text: "Morocco", code: "ma" },
+    { value: "Mozambique", text: "Mozambique", code: "mz" },
+    { value: "Myanmar", text: "Myanmar", code: "mm" },
+    { value: "Namibia", text: "Namibia", code: "na" },
+    { value: "Nauru", text: "Nauru", code: "nr" },
+    { value: "Nepal", text: "Nepal", code: "np" },
+    { value: "Netherlands", text: "Netherlands", code: "nl" },
+    { value: "New Zealand", text: "New Zealand", code: "nz" },
+    { value: "Nicaragua", text: "Nicaragua", code: "ni" },
+    { value: "Niger", text: "Niger", code: "ne" },
+    { value: "Nigeria", text: "Nigeria", code: "ng" },
+    { value: "Norway", text: "Norway", code: "no" },
+    { value: "Oman", text: "Oman", code: "om" },
+    { value: "Pakistan", text: "Pakistan", code: "pk" },
+    { value: "Palau", text: "Palau", code: "pw" },
+    { value: "Palestine", text: "Palestine", code: "ps" },
+    { value: "Panama", text: "Panama", code: "pa" },
+    { value: "Papua New Guinea", text: "Papua New Guinea", code: "pg" },
+    { value: "Paraguay", text: "Paraguay", code: "py" },
+    { value: "Peru", text: "Peru", code: "pe" },
+    { value: "Philippines", text: "Philippines", code: "ph" },
+    { value: "Poland", text: "Poland", code: "pl" },
+    { value: "Portugal", text: "Portugal", code: "pt" },
+    { value: "Qatar", text: "Qatar", code: "qa" },
+    { value: "Romania", text: "Romania", code: "ro" },
+    { value: "Russia", text: "Russia", code: "ru" },
+    { value: "Rwanda", text: "Rwanda", code: "rw" },
+    { value: "Saint Kitts and Nevis", text: "Saint Kitts and Nevis", code: "kn" },
+    { value: "Saint Lucia", text: "Saint Lucia", code: "lc" },
+    { value: "Saint Vincent and the Grenadines", text: "Saint Vincent and the Grenadines", code: "vc" },
+    { value: "Samoa", text: "Samoa", code: "ws" },
+    { value: "San Marino", text: "San Marino", code: "sm" },
+    { value: "Sao Tome and Principe", text: "Sao Tome and Principe", code: "st" },
+    { value: "Saudi Arabia", text: "Saudi Arabia", code: "sa" },
+    { value: "Senegal", text: "Senegal", code: "sn" },
+    { value: "Serbia", text: "Serbia", code: "rs" },
+    { value: "Seychelles", text: "Seychelles", code: "sc" },
+    { value: "Sierra Leone", text: "Sierra Leone", code: "sl" },
+    { value: "Singapore", text: "Singapore", code: "sg" },
+    { value: "Slovakia", text: "Slovakia", code: "sk" },
+    { value: "Slovenia", text: "Slovenia", code: "si" },
+    { value: "Solomon Islands", text: "Solomon Islands", code: "sb" },
+    { value: "Somalia", text: "Somalia", code: "so" },
+    { value: "South Africa", text: "South Africa", code: "za" },
+    { value: "South Sudan", text: "South Sudan", code: "ss" },
+    { value: "Spain", text: "Spain", code: "es" },
+    { value: "Sri Lanka", text: "Sri Lanka", code: "lk" },
+    { value: "Sudan", text: "Sudan", code: "sd" },
+    { value: "Suriname", text: "Suriname", code: "sr" },
+    { value: "Swaziland", text: "Swaziland", code: "sz" },
+    { value: "Sweden", text: "Sweden", code: "se" },
+    { value: "Switzerland", text: "Switzerland", code: "ch" },
+    { value: "Syria", text: "Syria", code: "sy" },
+    { value: "Taiwan", text: "Taiwan", code: "tw" },
+    { value: "Tajikistan", text: "Tajikistan", code: "tj" },
+    { value: "Tanzania", text: "Tanzania", code: "tz" },
+    { value: "Thailand", text: "Thailand", code: "th" },
+    { value: "Togo", text: "Togo", code: "tg" },
+    { value: "Tonga", text: "Tonga", code: "to" },
+    { value: "Trinidad and Tobago", text: "Trinidad and Tobago", code: "tt" },
+    { value: "Tunisia", text: "Tunisia", code: "tn" },
+    { value: "Turkey", text: "Turkey", code: "tr" },
+    { value: "Turkmenistan", text: "Turkmenistan", code: "tm" },
+    { value: "Tuvalu", text: "Tuvalu", code: "tv" },
+    { value: "UAE", text: "United Arab Emirates", code: "ae" },
+    { value: "Uganda", text: "Uganda", code: "ug" },
+    { value: "Ukraine", text: "Ukraine", code: "ua" },
+    { value: "UK", text: "United Kingdom", code: "gb" },
+    { value: "USA", text: "United States", code: "us" },
+    { value: "Uruguay", text: "Uruguay", code: "uy" },
+    { value: "Uzbekistan", text: "Uzbekistan", code: "uz" },
+    { value: "Vanuatu", text: "Vanuatu", code: "vu" },
+    { value: "Vatican City", text: "Vatican City", code: "va" },
+    { value: "Venezuela", text: "Venezuela", code: "ve" },
+    { value: "Vietnam", text: "Vietnam", code: "vn" },
+    { value: "Yemen", text: "Yemen", code: "ye" },
+    { value: "Zambia", text: "Zambia", code: "zm" },
+    { value: "Zimbabwe", text: "Zimbabwe", code: "zw" }
+];
+
+// Preferred countries for phone input
+const PREFERRED_COUNTRIES = ["in", "ae", "us", "gb"];
+
+// Initialize intl-tel-input when form opens
+function initPhoneInput() {
+    const input = document.querySelector("#reg-mobile");
+    if (input && window.intlTelInput) {
+        // Remove readonly before initializing
+        input.removeAttribute('readonly');
+
+        // Ensure type is tel for intl-tel-input
+        if (input.type !== 'tel') {
+            input.setAttribute('type', 'tel');
+        }
+
+        // Destroy existing instance if any
+        if (iti) {
+            try {
+                iti.destroy();
+            } catch (e) {
+                console.warn('Error destroying iti instance:', e);
+            }
+            iti = null;
+        }
+
+        if (!iti) {
+            iti = window.intlTelInput(input, {
+                initialCountry: "ae",
+                preferredCountries: PREFERRED_COUNTRIES,
+                separateDialCode: true,
+                utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.12/build/js/utils.js"
+            });
+
+            // Re-apply autocomplete prevention after intl-tel-input initialization
+            input.setAttribute('autocomplete', 'nope');
+            input.setAttribute('data-lpignore', 'true');
+            input.setAttribute('data-form-type', 'other');
+        }
+    }
+}
+
+// Initialize Select2 for nationality and country dropdowns
+function initSelect2() {
+    if (typeof $ === 'undefined' || !$.fn.select2) {
+        console.warn('jQuery or Select2 not loaded');
+        return;
+    }
+
+    // Populate nationality dropdown
+    const nationalitySelect = $('#reg-nationality');
+    if (nationalitySelect.length) {
+        // Destroy existing Select2 instance if any
+        if (nationalitySelect.data('select2')) {
+            nationalitySelect.select2('destroy');
+        }
+
+        nationalitySelect.empty().append(new Option('Select Nationality', ''));
+        COUNTRIES_LIST.forEach(country => {
+            const opt = document.createElement('option');
+            opt.value = country.value;
+            opt.textContent = country.text;
+            // include ISO alpha-2 code on option
+            opt.dataset.code = (country.code || '').toUpperCase();
+            nationalitySelect.append(opt);
+        });
+
+        nationalitySelect.select2({
+            placeholder: 'Select Nationality',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#registrationForm')
+        });
+
+        // Autofocus search box when dropdown opens for nationality
+        nationalitySelect.on('select2:open', function () {
+            setTimeout(function () {
+                const f = document.querySelector('.select2-search__field');
+                if (f) f.focus();
+            }, 100);
+        });
+    }
+
+    // Populate country of residence dropdown
+    const countrySelect = $('#reg-country-of-residence');
+    if (countrySelect.length) {
+        // Destroy existing Select2 instance if any
+        if (countrySelect.data('select2')) {
+            countrySelect.select2('destroy');
+        }
+
+        countrySelect.empty().append(new Option('Select Country of Residence', ''));
+        COUNTRIES_LIST.forEach(country => {
+            const opt = document.createElement('option');
+            opt.value = country.value;
+            opt.textContent = country.text;
+            // include ISO alpha-2 code on option
+            opt.dataset.code = (country.code || '').toUpperCase();
+            countrySelect.append(opt);
+        });
+
+        countrySelect.select2({
+            placeholder: 'Select Country of Residence',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#registrationForm')
+        });
+
+        // Autofocus search box when dropdown opens for country of residence
+        countrySelect.on('select2:open', function () {
+            setTimeout(function () {
+                const f = document.querySelector('.select2-search__field');
+                if (f) f.focus();
+            }, 100);
+        });
+
+        // Update badge preview on Select2 change
+        countrySelect.on('change', function () {
+            updateBadgePreview();
+        });
+    }
+}
+
+// Function to update badge preview in real-time
+function updateBadgePreview() {
+    const firstName = document.getElementById('reg-firstname');
+    const lastName = document.getElementById('reg-lastname');
+    const jobTitle = document.getElementById('reg-designation');
+    const company = document.getElementById('reg-company');
+    const countrySelect = $('#reg-country-of-residence');
+
+    if (!firstName || !lastName || !jobTitle || !company) return;
+
+    // Update full name
+    const fullName = [firstName.value.trim(), lastName.value.trim()].filter(name => name).join(' ') || 'FULL NAME';
+    const badgeFullname = document.getElementById('badge-fullname');
+    if (badgeFullname) {
+        badgeFullname.textContent = fullName.toUpperCase();
+    }
+
+    // Update job title
+    const badgeJobtitle = document.getElementById('badge-jobtitle');
+    if (badgeJobtitle) {
+        badgeJobtitle.textContent = jobTitle.value.trim().toUpperCase() || 'JOB TITLE';
+    }
+
+    // Update company name
+    const badgeCompany = document.getElementById('badge-company');
+    if (badgeCompany) {
+        badgeCompany.textContent = company.value.trim().toUpperCase() || 'COMPANY NAME';
+    }
+
+    // Update country of residence
+    const badgeCountry = document.getElementById('badge-country');
+    if (badgeCountry) {
+        const country = countrySelect.val() || 'COUNTRY OF RESIDENCE';
+        badgeCountry.textContent = country.toUpperCase();
+    }
+}
+
+// Initialize registration form after HTML is loaded
+function initRegistrationFormAfterLoad() {
+    console.log('🔧 Initializing registration form after load');
+    setTimeout(() => {
+        initPhoneInput();
+        initSelect2();
+
+        // Setup badge preview event listeners
+        setupBadgePreviewListeners();
+    }, 200);
+}
+
+// Setup badge preview event listeners
+function setupBadgePreviewListeners() {
+    // Use jQuery if available, otherwise use vanilla JS
+    if (typeof $ !== 'undefined') {
+        $(document).ready(function () {
+            $('#reg-firstname').on('input', updateBadgePreview);
+            $('#reg-lastname').on('input', updateBadgePreview);
+            $('#reg-designation').on('input', updateBadgePreview);
+            $('#reg-company').on('input', updateBadgePreview);
+        });
+    } else {
+        // Fallback to vanilla JS
+        const firstNameField = document.getElementById('reg-firstname');
+        const lastNameField = document.getElementById('reg-lastname');
+        const designationField = document.getElementById('reg-designation');
+        const companyField = document.getElementById('reg-company');
+
+        if (firstNameField) firstNameField.addEventListener('input', updateBadgePreview);
+        if (lastNameField) lastNameField.addEventListener('input', updateBadgePreview);
+        if (designationField) designationField.addEventListener('input', updateBadgePreview);
+        if (companyField) companyField.addEventListener('input', updateBadgePreview);
+    }
+}
+
+function openRegistrationForm() {
+    console.log('📝 Opening registration form');
+    const registrationForm = document.getElementById('registrationForm');
+    if (registrationForm) {
+        registrationForm.classList.remove('hidden');
+        console.log('👁️ Registration form visible');
+    }
+
+    // Clear any previous errors when opening the form
+    clearErrors();
+
+    // Hide loading state when opening form
+    hideRegistrationLoading();
+
+    // Ensure autocomplete is disabled on form and fields
+    disableRegistrationAutocomplete();
+
+    // Initialize phone input and Select2 when form opens
+    setTimeout(() => {
+        initPhoneInput();
+        initSelect2();
+        setupFieldErrorClearing();
+        setupBadgePreviewListeners();
+
+        // Ensure all readonly attributes are removed when form is fully loaded
+        const form = document.getElementById('registrationFormElement');
+        if (form) {
+            const inputs = form.querySelectorAll('input[readonly]');
+            inputs.forEach(input => {
+                if (!input.hasAttribute('aria-hidden')) {
+                    input.removeAttribute('readonly');
+                }
+            });
+        }
+    }, 100);
+
+    // Focus on first name field after form is ready
+    setTimeout(() => {
+        const firstNameField = document.getElementById('reg-firstname');
+        if (firstNameField) {
+            // Remove readonly before focusing
+            firstNameField.removeAttribute('readonly');
+            firstNameField.focus();
+        }
+    }, 200);
+
+    sendToFlutter({
+        type: 'openRegistrationForm',
+        timestamp: new Date().toISOString()
+    });
+}
+
+function closeRegistrationForm() {
+    console.log('❌ Closing registration form');
+    const registrationForm = document.getElementById('registrationForm');
+    if (registrationForm) {
+        registrationForm.classList.add('hidden');
+        console.log('🙈 Registration form hidden');
+    }
+
+    // Clear any existing validation errors and reset fields
+    clearErrors();
+    clearRegistrationFormFields();
+
+    // Clear auto-close timeout if it exists
+    if (registrationFormAutoCloseTimeout) {
+        clearTimeout(registrationFormAutoCloseTimeout);
+        registrationFormAutoCloseTimeout = null;
+    }
+
+    // Hide loading state when closing form
+    hideRegistrationLoading();
+
+    // Destroy Select2 instances when closing
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        const nationalitySelect = $('#reg-nationality');
+        const countrySelect = $('#reg-country-of-residence');
+
+        if (nationalitySelect.length && nationalitySelect.data('select2')) {
+            nationalitySelect.select2('destroy');
+        }
+        if (countrySelect.length && countrySelect.data('select2')) {
+            countrySelect.select2('destroy');
+        }
+    }
+
+    // Destroy intl-tel-input instance when closing
+    if (iti) {
+        try {
+            iti.destroy();
+        } catch (e) {
+            console.warn('Error destroying iti instance:', e);
+        }
+        iti = null;
+    }
+
+    sendToFlutter({
+        type: 'closeRegistrationForm',
+        timestamp: new Date().toISOString()
+    });
+}
+
+// Disable browser autocomplete/autocorrect for registration form fields
+function disableRegistrationAutocomplete() {
+    const form = document.getElementById('registrationFormElement');
+    if (!form) return;
+
+    // Set form-level autocomplete
+    form.setAttribute('autocomplete', 'chrome-off');
+    form.setAttribute('novalidate', 'true');
+
+    const fields = form.querySelectorAll('input, select');
+    fields.forEach(field => {
+        // Skip decoy fields
+        if (field.hasAttribute('aria-hidden') || field.getAttribute('name')?.startsWith('fake-')) {
+            return;
+        }
+
+        // Aggressive autocomplete prevention
+        field.setAttribute('autocomplete', 'nope');
+        field.setAttribute('autocorrect', 'off');
+        field.setAttribute('autocapitalize', 'off');
+        field.setAttribute('spellcheck', 'false');
+        field.setAttribute('data-lpignore', 'true');
+        field.setAttribute('data-form-type', 'other');
+
+        // For text inputs, ensure readonly is removed on focus
+        if (field.tagName === 'INPUT' && field.type !== 'hidden') {
+            // Add readonly initially if not already set
+            if (!field.hasAttribute('readonly')) {
+                field.setAttribute('readonly', 'readonly');
+            }
+
+            // Ensure focus handler removes readonly
+            field.addEventListener('focus', function () {
+                this.removeAttribute('readonly');
+                // For email/tel, change type on focus
+                const inputId = this.id;
+                if (inputId === 'reg-email' && this.type !== 'email') {
+                    this.setAttribute('type', 'email');
+                } else if (inputId === 'reg-mobile' && this.type !== 'tel') {
+                    this.setAttribute('type', 'tel');
+                }
+            }, { once: false });
+
+            // Also remove readonly on click/touch
+            field.addEventListener('mousedown', function () {
+                this.removeAttribute('readonly');
+            }, { once: false });
+
+            field.addEventListener('touchstart', function () {
+                this.removeAttribute('readonly');
+            }, { once: false });
+        }
+    });
+
+    // Small delay to ensure readonly is applied, then remove it programmatically after a moment
+    setTimeout(() => {
+        fields.forEach(field => {
+            if (field.tagName === 'INPUT' && field.type !== 'hidden' && !field.hasAttribute('aria-hidden')) {
+                // Remove readonly after a short delay so user can interact
+                field.removeAttribute('readonly');
+            }
+        });
+    }, 100);
+}
+
+// Clear all registration fields and reset UI state
+function clearRegistrationFormFields() {
+    const form = document.getElementById('registrationFormElement');
+    if (!form) return;
+
+    // Reset native form fields
+    form.reset();
+
+    // Clear text inputs explicitly (covers cases where reset isn't enough)
+    ['reg-firstname', 'reg-lastname', 'reg-email', 'reg-company', 'reg-designation'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    // Clear phone input value
+    const phoneInput = document.getElementById('reg-mobile');
+    if (phoneInput) {
+        phoneInput.value = '';
+    }
+
+    // Clear select values (with or without Select2)
+    const nationalitySelect = document.getElementById('reg-nationality');
+    if (nationalitySelect) {
+        nationalitySelect.value = '';
+        if (typeof $ !== 'undefined' && $.fn.select2 && $('#reg-nationality').data('select2')) {
+            $('#reg-nationality').val('').trigger('change');
+        }
+    }
+    const countrySelectEl = document.getElementById('reg-country-of-residence');
+    if (countrySelectEl) {
+        countrySelectEl.value = '';
+        if (typeof $ !== 'undefined' && $.fn.select2 && $('#reg-country-of-residence').data('select2')) {
+            $('#reg-country-of-residence').val('').trigger('change');
+        }
+    }
+
+    // Reset badge preview placeholders
+    const badgeFullname = document.getElementById('badge-fullname');
+    if (badgeFullname) badgeFullname.textContent = 'FULL NAME';
+    const badgeJobtitle = document.getElementById('badge-jobtitle');
+    if (badgeJobtitle) badgeJobtitle.textContent = 'JOB TITLE';
+    const badgeCompany = document.getElementById('badge-company');
+    if (badgeCompany) badgeCompany.textContent = 'COMPANY NAME';
+    const badgeCountry = document.getElementById('badge-country');
+    if (badgeCountry) badgeCountry.textContent = 'COUNTRY OF RESIDENCE';
+}
+
+function showRegistrationLoading() {
+    const loadingOverlay = document.getElementById('registrationLoadingOverlay');
+    const submitBtn = document.getElementById('registration-submit-btn');
+
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('visible');
+    }
+
+    if (submitBtn) {
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+    }
+}
+
+function hideRegistrationLoading() {
+    const loadingOverlay = document.getElementById('registrationLoadingOverlay');
+    const submitBtn = document.getElementById('registration-submit-btn');
+
+    // Clear auto-close timeout if it exists
+    if (registrationFormAutoCloseTimeout) {
+        clearTimeout(registrationFormAutoCloseTimeout);
+        registrationFormAutoCloseTimeout = null;
+    }
+
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('visible');
+    }
+
+    if (submitBtn) {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register & Print';
+    }
+}
+
+function handleRegistrationSubmit(event) {
+    event.preventDefault();
+    console.log('📝 Registration form submitted');
+
+    // Clear previous errors
+    clearErrors();
+    // Show loading state
+    showRegistrationLoading();
+
+    // Get form values by ID
+    const firstNameEl = document.getElementById('reg-firstname');
+    const lastNameEl = document.getElementById('reg-lastname');
+    const emailEl = document.getElementById('reg-email');
+    const mobileEl = document.getElementById('reg-mobile');
+    const companyEl = document.getElementById('reg-company');
+    const designationEl = document.getElementById('reg-designation');
+    const nationalitySelectEl = document.getElementById('reg-nationality');
+    const corSelectEl = document.getElementById('reg-country-of-residence');
+
+    // Get phone number from intl-tel-input if available
+    let mobile = '';
+    if (iti) {
+        try {
+            const phoneNumber = iti.getNumber();
+            if (phoneNumber) {
+                mobile = phoneNumber;
+            } else {
+                // Fallback to input value
+                const phoneNumberInput = mobileEl ? mobileEl.value.trim() : '';
+                const countryCode = iti.getSelectedCountryData().dialCode || '971';
+                mobile = phoneNumberInput ? `+${countryCode}${phoneNumberInput}` : '';
+            }
+        } catch (e) {
+            console.warn('Error getting phone number from iti:', e);
+            // Fallback to input value
+            const phoneNumber = mobileEl ? mobileEl.value.trim() : '';
+            const countryCode = '+971';
+            mobile = phoneNumber ? `${countryCode}${phoneNumber}` : '';
+        }
+    } else {
+        // Fallback if iti is not initialized
+        const phoneNumber = mobileEl ? mobileEl.value.trim() : '';
+        const countryCode = '+971';
+        mobile = phoneNumber ? `${countryCode}${phoneNumber}` : '';
+    }
+
+    // Resolve ISO codes from selected options
+    const nationalityCode = nationalitySelectEl && nationalitySelectEl.selectedIndex >= 0
+        ? (nationalitySelectEl.options[nationalitySelectEl.selectedIndex].dataset.code || '')
+        : '';
+    const corCode = corSelectEl && corSelectEl.selectedIndex >= 0
+        ? (corSelectEl.options[corSelectEl.selectedIndex].dataset.code || '')
+        : '';
+
+    // Get select values - handle both native select and Select2
+    let nationality = '';
+    let countryOfResidence = '';
+
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        // Use Select2 if available
+        if ($('#reg-nationality').data('select2')) {
+            nationality = $('#reg-nationality').val() || '';
+        } else {
+            nationality = nationalitySelectEl ? nationalitySelectEl.value : '';
+        }
+
+        if ($('#reg-country-of-residence').data('select2')) {
+            countryOfResidence = $('#reg-country-of-residence').val() || '';
+        } else {
+            countryOfResidence = corSelectEl ? corSelectEl.value : '';
+        }
+    } else {
+        // Use native select values
+        nationality = nationalitySelectEl ? nationalitySelectEl.value : '';
+        countryOfResidence = corSelectEl ? corSelectEl.value : '';
+    }
+
+    const registrationData = {
+        firstname: firstNameEl ? firstNameEl.value.trim() : '',
+        lastname: lastNameEl ? lastNameEl.value.trim() : '',
+        email: emailEl ? emailEl.value.trim() : '',
+        mobile: mobile,
+        company_name: companyEl ? companyEl.value.trim() : '',
+        designation: designationEl ? designationEl.value.trim() : '',
+        nationality: nationality,
+        country_of_residence: countryOfResidence,
+        // ensure country mirrors nationality
+        country: nationality,
+        // dynamic codes from selections
+        country_code: (nationalityCode || '').toUpperCase(),
+        nationality_code: (nationalityCode || '').toUpperCase(),
+        country_of_residence_code: (corCode || '').toUpperCase(),
+        ticket: 42,
+        // ticket: 29,
+    };
+
+    console.log('📋 Registration data:', registrationData);
+
+    // Send to Flutter
+    sendToFlutter({
+        type: 'registrationSubmit',
+        data: registrationData,
+        timestamp: new Date().toISOString()
+    });
+
+    // Auto-close form after 10 seconds if no errors occur
+    // Clear any existing timeout first
+    if (registrationFormAutoCloseTimeout) {
+        clearTimeout(registrationFormAutoCloseTimeout);
+    }
+
+    registrationFormAutoCloseTimeout = setTimeout(() => {
+        console.log('⏰ Auto-closing registration form after 10 seconds');
+        closeRegistrationForm();
+        registrationFormAutoCloseTimeout = null;
+    }, 10000);
+
+    // Note: Loading will be hidden when form closes or errors are shown
+    // closeRegistrationForm();
+
+    // Optionally show success message or welcome message
+    // showWelcome(registrationData);
+}
+
+// Field mapping from API field names to form field IDs
+const registrationFieldMap = {
+    'firstname': 'reg-firstname',
+    'lastname': 'reg-lastname',
+    'email': 'reg-email',
+    'mobile': 'reg-mobile',
+    'company_name': 'reg-company',
+    'company': 'reg-company', // Also support 'company' directly
+    'designation': 'reg-designation',
+    'nationality': 'reg-nationality',
+    'ticket': 'reg-ticket',
+    'country_of_residence': 'reg-country-of-residence'
+};
+
+// Function to show validation errors
+function showError(errorData) {
+    console.log('❌ Showing registration errors:', errorData);
+
+    // Hide loading state when showing errors
+    hideRegistrationLoading();
+
+    // Clear previous errors first
+    clearErrors();
+
+    // Handle error structure: { detail: { field: [error messages] } }
+    let errors = null;
+    if (errorData && errorData.detail) {
+        errors = errorData.detail;
+    } else if (errorData && typeof errorData === 'object') {
+        errors = errorData;
+    }
+
+    if (!errors) {
+        console.warn('⚠️ Invalid error format');
+        return;
+    }
+
+    // Iterate through each error field
+    Object.keys(errors).forEach(fieldName => {
+        const fieldId = registrationFieldMap[fieldName];
+
+        // Skip if field doesn't exist in form
+        if (!fieldId) {
+            console.warn(`⚠️ Field "${fieldName}" not found in form`);
+            return;
+        }
+
+        const fieldElement = document.getElementById(fieldId);
+        if (!fieldElement) {
+            console.warn(`⚠️ Element with ID "${fieldId}" not found`);
+            return;
+        }
+
+        // Get error messages (could be array or single string)
+        const errorMessages = Array.isArray(errors[fieldName])
+            ? errors[fieldName]
+            : [errors[fieldName]];
+
+        // Display first error message
+        const errorMessage = errorMessages[0];
+
+        // Add error class to input/select
+        fieldElement.classList.add('error');
+
+        // If it's a mobile field error, also highlight the country code selector
+        if (fieldId === 'reg-mobile') {
+            const countryCodeSelect = document.getElementById('reg-country-code');
+            if (countryCodeSelect) {
+                countryCodeSelect.classList.add('error');
+            }
+        }
+
+        // Find the parent registration-field div
+        const fieldContainer = fieldElement.closest('.registration-field');
+        if (fieldContainer) {
+            // Remove existing error message if any
+            const existingError = fieldContainer.querySelector('.registration-field-error');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            // Create and append error message
+            const errorElement = document.createElement('span');
+            errorElement.className = 'registration-field-error';
+            errorElement.textContent = errorMessage;
+            fieldContainer.appendChild(errorElement);
+        }
+    });
+}
+
+// Function to clear all validation errors
+function clearErrors() {
+    // Remove error class from all fields (including country code select)
+    const errorFields = document.querySelectorAll('.registration-field input.error, .registration-field select.error, .phone-input-container select.error, .phone-input-container input.error');
+    errorFields.forEach(field => {
+        field.classList.remove('error');
+    });
+
+    // Remove all error messages
+    const errorMessages = document.querySelectorAll('.registration-field-error');
+    errorMessages.forEach(error => {
+        error.remove();
+    });
 }
 
 // Customer details data
@@ -274,11 +1230,213 @@ function updateUserDetailsForm(userData) {
     }
 }
 
+// Clear field error when user starts typing
+function setupFieldErrorClearing() {
+    const registrationForm = document.getElementById('registrationFormElement');
+    if (registrationForm) {
+        const fields = registrationForm.querySelectorAll('input, select');
+        fields.forEach(field => {
+            // Handle input events for text fields
+            field.addEventListener('input', function () {
+                // Clear error for this specific field
+                this.classList.remove('error');
+                const fieldContainer = this.closest('.registration-field');
+                if (fieldContainer) {
+                    const errorElement = fieldContainer.querySelector('.registration-field-error');
+                    if (errorElement) {
+                        errorElement.remove();
+                    }
+                }
+            });
+
+            // Handle change events for select dropdowns
+            if (field.tagName === 'SELECT') {
+                field.addEventListener('change', function () {
+                    // Clear error for this specific field
+                    this.classList.remove('error');
+                    const fieldContainer = this.closest('.registration-field');
+                    if (fieldContainer) {
+                        const errorElement = fieldContainer.querySelector('.registration-field-error');
+                        if (errorElement) {
+                            errorElement.remove();
+                        }
+                    }
+                });
+            }
+        });
+
+        // Setup phone number field to only accept numbers
+        const phoneNumberField = document.getElementById('reg-mobile');
+        if (phoneNumberField) {
+            phoneNumberField.addEventListener('input', function (e) {
+                // Remove any non-numeric characters
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            phoneNumberField.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const numbersOnly = paste.replace(/[^0-9]/g, '');
+                this.value = numbersOnly;
+            });
+        }
+    }
+}
+
 // Notify Flutter that page is loaded
 window.addEventListener('load', function () {
     console.log('✅ Event Check-In page loaded');
+
+    // Setup field error clearing on input
+    setupFieldErrorClearing();
+
+    // Globally disable autocomplete and inject decoy fields for any forms/inputs
+    try {
+        disableAllAutocomplete();
+        observeDynamicFormsForAutocomplete();
+    } catch (e) {
+        console.warn('Error disabling autocomplete globally:', e);
+    }
     sendToFlutter({
         type: 'pageLoaded',
         timestamp: new Date().toISOString()
     });
 });
+
+// Add hidden decoy fields and disable autofill across all forms/inputs
+function disableAllAutocomplete() {
+    // Disable on every form
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        if (!form) return;
+        form.setAttribute('autocomplete', 'chrome-off');
+        form.setAttribute('novalidate', 'true');
+        // Inject decoy fields once per form
+        addDecoyFieldsToForm(form);
+        // Disable on all controls within the form
+        const controls = form.querySelectorAll('input, select, textarea');
+        controls.forEach(function (el) {
+            // Skip decoy fields
+            if (el.hasAttribute('aria-hidden') || el.getAttribute('name')?.startsWith('fake-')) {
+                return;
+            }
+            el.setAttribute('autocomplete', 'nope');
+            el.setAttribute('autocapitalize', 'off');
+            el.setAttribute('autocorrect', 'off');
+            el.setAttribute('spellcheck', 'false');
+            el.setAttribute('data-lpignore', 'true');
+            el.setAttribute('data-form-type', 'other');
+        });
+    });
+
+    // Also disable on any loose inputs on the page (outside forms)
+    const looseControls = document.querySelectorAll('body input, body select, body textarea');
+    looseControls.forEach(function (el) {
+        // Skip decoy fields
+        if (el.hasAttribute('aria-hidden') || el.getAttribute('name')?.startsWith('fake-')) {
+            return;
+        }
+        el.setAttribute('autocomplete', 'nope');
+        el.setAttribute('autocapitalize', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('spellcheck', 'false');
+        el.setAttribute('data-lpignore', 'true');
+        el.setAttribute('data-form-type', 'other');
+    });
+}
+
+function addDecoyFieldsToForm(form) {
+    // Skip if decoys already added
+    if (form.querySelector('[data-decoy-field="true"]')) return;
+
+    const offscreenStyle = 'position:absolute; left:-9999px; top:-9999px; opacity:0; height:0; width:0; border:0; padding:0;';
+
+    const decoyUsername = document.createElement('input');
+    decoyUsername.type = 'text';
+    decoyUsername.setAttribute('aria-hidden', 'true');
+    decoyUsername.setAttribute('tabindex', '-1');
+    decoyUsername.setAttribute('autocomplete', 'username');
+    decoyUsername.setAttribute('data-decoy-field', 'true');
+    decoyUsername.setAttribute('style', offscreenStyle);
+
+    const decoyPassword = document.createElement('input');
+    decoyPassword.type = 'password';
+    decoyPassword.setAttribute('aria-hidden', 'true');
+    decoyPassword.setAttribute('tabindex', '-1');
+    decoyPassword.setAttribute('autocomplete', 'new-password');
+    decoyPassword.setAttribute('data-decoy-field', 'true');
+    decoyPassword.setAttribute('style', offscreenStyle);
+
+    // Insert at the beginning of the form
+    if (form.firstChild) {
+        form.insertBefore(decoyUsername, form.firstChild);
+        form.insertBefore(decoyPassword, form.firstChild);
+    } else {
+        form.appendChild(decoyUsername);
+        form.appendChild(decoyPassword);
+    }
+}
+
+// Observe DOM mutations to apply to dynamically inserted forms/inputs
+function observeDynamicFormsForAutocomplete() {
+    const observer = new MutationObserver((mutations) => {
+        let needsRun = false;
+        for (const m of mutations) {
+            if (m.type === 'childList' && (m.addedNodes && m.addedNodes.length)) {
+                for (const node of m.addedNodes) {
+                    if (!(node instanceof HTMLElement)) continue;
+                    if (node.matches && (node.matches('form') || node.querySelector('form')))
+                        needsRun = true;
+                    if (node.matches && (node.matches('input, select, textarea') || node.querySelector('input, select, textarea')))
+                        needsRun = true;
+                }
+            }
+
+            // Watch for autofill attribute changes
+            if (m.type === 'attributes' && m.attributeName === 'autocomplete') {
+                const target = m.target;
+                if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement) {
+                    // If browser tries to change autocomplete, revert it
+                    if (!target.hasAttribute('aria-hidden') && !target.getAttribute('name')?.startsWith('fake-')) {
+                        if (target.getAttribute('autocomplete') !== 'nope') {
+                            target.setAttribute('autocomplete', 'nope');
+                        }
+                    }
+                }
+            }
+        }
+        if (needsRun) {
+            disableAllAutocomplete();
+        }
+    });
+
+    observer.observe(document.documentElement || document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['autocomplete']
+    });
+
+    // Also monitor for autofill events
+    document.addEventListener('input', function (e) {
+        const target = e.target;
+        if (target instanceof HTMLInputElement && target.matches('#registrationFormElement input')) {
+            // Check if browser autofilled by checking if value changed without user input
+            // This is a heuristic check
+            if (target.hasAttribute('data-user-input') === false && target.value) {
+                // Possibly autofilled - ensure autocomplete is still disabled
+                target.setAttribute('autocomplete', 'nope');
+                target.setAttribute('data-lpignore', 'true');
+                target.setAttribute('data-form-type', 'other');
+            }
+        }
+    });
+
+    // Mark fields as user-input when user types
+    document.addEventListener('keydown', function (e) {
+        const target = e.target;
+        if (target instanceof HTMLInputElement && target.matches('#registrationFormElement input')) {
+            target.setAttribute('data-user-input', 'true');
+        }
+    });
+}
