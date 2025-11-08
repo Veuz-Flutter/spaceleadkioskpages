@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
-     <style>
-         .main-content {
+    <style>
+        .main-content {
             background: #00000099;
         }
 
@@ -83,16 +83,19 @@
         .footer::after {
             background: linear-gradient(91deg, #E6007E00 0%, #ffffff 100%);
         }
-     </style>
+    </style>
 </head>
 
 <body>
     <!-- Dummy Controls Panel -->
     <div id="dummyControllContainer"></div>
 
+    <div id="welcomeMessageContainer"></div>
+
+
     <!-- Header Section -->
 
-        <div class="main_bg_video">
+    <div class="main_bg_video">
         <video autoplay muted loop playsinline>
             <source src="videos/bg_video.mp4" type="video/webm">
         </video>
@@ -116,7 +119,7 @@
     </div>
 
     <!-- Main Content Section -->
-    
+
     <div class="main-content">
         <div class="main-content_wrapper" id="mainContent">
             <div class="welcome-section">
@@ -179,6 +182,14 @@
                 document.getElementById('dummyControllContainer').innerHTML = html;
             })
             .catch(error => console.error('Error loading customer details panel:', error));
+
+        // Load welcome message from external file
+        fetch('welcome-message.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('welcomeMessageContainer').innerHTML = html;
+            })
+            .catch(error => console.error('Error loading welcome message:', error));
     </script>
     <script src="scripts.js"></script>
 </body>
